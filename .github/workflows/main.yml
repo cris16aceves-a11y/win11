@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       os:
-        description: "11"
+        description: "Selecciona la versión de Windows"
         required: true
         default: 'windows-latest'
         type: choice
@@ -12,12 +12,14 @@ on:
         - windows-latest
         - windows-2022
         - windows-2019
+
       ts_version:
-        description: 'Tailscale version to install'
+        description: 'Versión de Tailscale a instalar'
         required: true
         default: '1.82.0'
+
       timeout:
-        description: 'Session timeout in minutes'
+        description: 'Tiempo de sesión en minutos'
         required: true
         default: '360'
 
@@ -53,7 +55,7 @@ jobs:
       - name: Establish Tailscale Connection
         id: ts_connect
         shell: pwsh
-        run: ./scripts/Connect-Tailscale.ps1 -tailscaleAuthKey 'tskey-auth-kCvjxLB2uE11CNTRL-RwHTMd7aSA8CQpcYShQPA8vB3B6QfbUK' -githubRunId
+        run: ./scripts/Connect-Tailscale.ps1 -tailscaleAuthKey 'tskey-auth-kCvjxLB2uE11CNTRL-RwHTMd7aSA8CQpcYShQPA8vB3B6QfbUK' -githubRunId ${{ github.run_id }}
 
       - name: Configure RDP and Secure Firewall
         shell: pwsh
@@ -77,17 +79,14 @@ jobs:
           Write-Host "   Address:   ${{ steps.ts_connect.outputs.ts_ip }}"
           Write-Host "   Username:  ${{ steps.create_user.outputs.rdp_user }}"
           Write-Host "   Password:  ${{ steps.create_user.outputs.rdp_password }}"
-          Write-Host "Keep this workflow running to maintain the connection."
+          Write-Host "Mantén el workflow activo para conservar la conexión."
 
       - name: Maintain Connection
         run: |
-          # Keep runner active
           while ($true) {
-              Write-Host "[$(Get-Date)] RDP Active - Use Ctrl+C in workflow to terminate"
+              Write-Host "[$(Get-Date)] RDP Active - Stop workflow to end session"
               Start-Sleep -Seconds 300
           }
-          
-      - name: Cleanup
-        if: always()
+
         shell: pwsh
         run: ./scripts/Cleanup.ps1
